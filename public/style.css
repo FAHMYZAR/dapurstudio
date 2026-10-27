@@ -1,0 +1,94 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0 auto;
+  max-width: 720px;
+  padding: 16px;
+  background: #ffffff;
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
+header h1 {
+  color: #0f766e;
+  margin-bottom: 4px;
+}
+
+header p {
+  margin-top: 0;
+  color: #555555;
+}
+
+.card {
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.card img {
+  width: 100%;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+label {
+  display: block;
+  margin: 12px 0;
+  font-weight: 600;
+}
+
+label input,
+label textarea {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #bbbbbb;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 400;
+}
+
+.row input {
+  display: inline-block;
+}
+
+button {
+  background: #0f766e;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #999999;
+}
+
+.hint {
+  color: #555555;
+  font-size: 14px;
+}
+
+.item {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #eeeeee;
+  padding: 12px 0;
+}
+
+.item img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  margin: 0;
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DapurStudio</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1>DapurStudio</h1>
+  <p>Foto dapur jadi foto katalog, lengkap dengan estimasi biaya dan caption jualan.</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Foto baru</h2>
+    <input id="photo" type="file" accept="image/*">
+    <img id="preview" alt="">
+    <button id="process">Proses jadi katalog</button>
+    <p id="status"></p>
+  </section>
+
+  <section class="card" id="result" hidden>
+    <h2>Hasil katalog</h2>
+    <img id="result-image" alt="Foto katalog">
+    <label>Hidangan
+      <input id="dish" type="text">
+    </label>
+    <label>Estimasi biaya bahan (Rp)
+      <span class="row">
+        <input id="cost-min" type="number"> <span>sampai</span> <input id="cost-max" type="number">
+      </span>
+    </label>
+    <label>Bahan utama
+      <textarea id="ingredients" rows="5"></textarea>
+    </label>
+    <label>Caption jualan
+      <textarea id="caption" rows="4"></textarea>
+    </label>
+    <p class="hint">Periksa dan koreksi dulu sebelum simpan. Estimasi biaya adalah rentang, bukan angka pasti.</p>
+    <button id="save">Simpan ke katalog</button>
+  </section>
+
+  <section class="card">
+    <h2>Katalog</h2>
+    <div id="catalog"></div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
