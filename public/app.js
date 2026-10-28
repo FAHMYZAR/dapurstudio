@@ -1,10 +1,33 @@
 const $ = (id) => document.getElementById(id);
 let current = null;
 
+const esc = (text) =>
+  String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
 $("photo").addEventListener("change", () => {
   const file = $("photo").files[0];
   if (!file) return;
-  $("preview").src = URL.createObjectURL(file);
+  const url = URL.createObjectURL(file);
+  $("preview").src = url;
+  $("preview").hidden = false;
+  $("original-image").src = url;
+  $("upload-label").textContent = file.name;
+  $("process").disabled = false;
+});
+
+document.querySelectorAll(".tabs button").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach((other) => {
+      other.setAttribute("aria-selected", other === tab ? "true" : "false");
+    });
+    document.querySelectorAll("[role=tabpanel]").forEach((panel) => {
+      panel.hidden = panel.id !== tab.dataset.tab;
+    });
+  });
 });
 
 $("process").addEventListener("click", async () => {
@@ -15,6 +38,7 @@ $("process").addEventListener("click", async () => {
   }
   $("status").textContent = "Memproses, tunggu sebentar...";
   $("process").disabled = true;
+  $("process").querySelector(".spinner").hidden = false;
   try {
     const form = new FormData();
     form.append("photo", file);
@@ -35,11 +59,13 @@ $("process").addEventListener("click", async () => {
       .join("\n");
     $("caption").value = data.caption;
     $("result").hidden = false;
+    $("result").scrollIntoView({ behavior: "smooth", block: "start" });
     $("status").textContent = "Jadi. Koreksi dulu kalau perlu, lalu simpan.";
   } catch (error) {
     $("status").textContent = error.message;
   } finally {
     $("process").disabled = false;
+    $("process").querySelector(".spinner").hidden = true;
   }
 });
 
@@ -83,13 +109,13 @@ $("save").addEventListener("click", async () => {
 async function loadCatalog() {
   const items = await (await fetch("/api/catalog")).json();
   const renderItems = (item) => {
-    if (typeof item.items === "string") return `<p>${item.items}</p>`;
+    if (typeof item.items === "string") return `<p>${esc(item.items)}</p>`;
     if (!Array.isArray(item.items)) return "";
     return item.items
       .map(
         (group) =>
-          `<p><strong>${group.name}</strong><br>${group.ingredients
-            .map((entry) => `${entry.name}: ${entry.amount}`)
+          `<p><strong>${esc(group.name)}</strong><br>${group.ingredients
+            .map((entry) => `${esc(entry.name)}: ${esc(entry.amount)}`)
             .join("<br>")}</p>`,
       )
       .join("");
@@ -99,17 +125,18 @@ async function loadCatalog() {
         .map(
           (item) => `
       <article class="item">
-        <img src="${item.imageUrl}" alt="">
+        <img src="${esc(item.imageUrl)}" alt="">
         <div>
-          <strong>${item.dish}</strong>
-          <p>Rp ${item.costRangeIdr.min.toLocaleString("id-ID")} - Rp ${item.costRangeIdr.max.toLocaleString("id-ID")}</p>
+          <strong>${esc(item.dish)}</strong>
+          <p class="price">Rp ${item.costRangeIdr.min.toLocaleString("id-ID")} - Rp ${item.costRangeIdr.max.toLocaleString("id-ID")}</p>
+          <p class="pill">Siap katalog</p>
           ${renderItems(item)}
-          <p>${item.caption}</p>
+          <p>${esc(item.caption)}</p>
         </div>
       </article>`,
         )
         .join("")
-    : "<p>Belum ada menu tersimpan.</p>";
+    : "<p>Belum ada menu tersimpan. Hasil yang lu simpan muncul di sini.</p>";
 }
 
 loadCatalog();

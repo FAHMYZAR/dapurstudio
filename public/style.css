@@ -1,52 +1,329 @@
+/* DapurStudio visual decisions, one line each (antislop R-31):
+   - Orange brand (#C2410C): Figma board palette, warm seller identity, one accent only.
+   - Peach hero (#FFF1E6): Figma hero card, marks the upload moment apart from the rest.
+   - SF Pro stack, Inter after it: user rule is iOS font; Apple devices render real SF Pro,
+     Android falls back to Inter, the closest open lookalike, since SF Pro is not on Android.
+   - 480px column: Figma iPhone frame is 393px wide; sellers work from phones.
+   - Tabs Foto/Biaya/Caption: Figma Android result tab bar, one concern visible at a time.
+   - Ingredients folded in <details>: seller still corrects them, but the dish and cost stay first.
+   - Before/after stacked with labels: at phone width side-by-side shrinks both photos too far.
+   - No bottom nav: no settings destination exists, and a dead control is worse than none.
+   - No sample-photo button: the original kitchen photo is not cleared for the public repo yet.
+   Dials: ENERGY 2 / RHYTHM 2 / MOTION 1 (balanced, iOS-calm, hover states and one spinner only).
+*/
+
+:root {
+  --brand: #c2410c;
+  --brand-dark: #9a3412;
+  --peach: #fff1e6;
+  --peach-line: #fed7aa;
+  --ink: #1c1917;
+  --muted: #57534e;
+  --line: #e7e5e4;
+  --card: #ffffff;
+  --bg: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   margin: 0 auto;
-  max-width: 720px;
-  padding: 16px;
-  background: #ffffff;
-  color: #1a1a1a;
+  max-width: 480px;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  color: var(--ink);
   line-height: 1.5;
 }
 
-header h1 {
-  color: #0f766e;
-  margin-bottom: 4px;
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
-header p {
-  margin-top: 0;
-  color: #555555;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 16px;
+}
+
+.wordmark {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.wordmark span {
+  color: var(--brand);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--peach);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar svg {
+  width: 20px;
+  height: 20px;
+}
+
+.hero {
+  background: var(--peach);
+  border-radius: 24px;
+  padding: 20px;
+}
+
+.pill {
+  display: inline-block;
+  background: var(--card);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border-radius: 999px;
+  margin: 0 0 16px;
+}
+
+.hero h1 {
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+
+.hero-sub {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0 0 20px;
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  background: var(--brand);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.btn-primary svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: var(--brand-dark);
+  }
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  background: #a8a29e;
+  cursor: default;
+  transform: none;
+}
+
+.hero .btn-primary + .btn-primary {
+  margin-top: 12px;
+}
+
+#preview {
+  width: 100%;
+  border-radius: 16px;
+  margin: 16px 0 0;
+}
+
+#status {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 12px 0 0;
+  min-height: 21px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.features {
+  margin-top: 32px;
+}
+
+.features h2,
+.catalog-section h2,
+.card h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.feature-row {
+  display: flex;
+  gap: 10px;
+}
+
+.feature {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: var(--card);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+@media (hover: hover) {
+  .feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(28, 25, 23, 0.08);
+  }
+}
+
+.feature-num {
+  display: inline-block;
+  background: var(--peach);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.feature svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  color: var(--brand);
+  margin: 14px 0 8px;
+}
+
+.feature strong {
+  display: block;
+  font-size: 14px;
+}
+
+.feature span:last-child {
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .card {
-  border: 1px solid #dddddd;
-  border-radius: 12px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
   padding: 16px;
-  margin: 16px 0;
+  margin-top: 32px;
+  background: var(--card);
 }
 
-.card img {
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tabs button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.tabs button[aria-selected="true"] {
+  background: var(--ink);
+  color: #ffffff;
+  border-color: var(--ink);
+}
+
+figure {
+  margin: 0 0 16px;
+}
+
+figure img {
   width: 100%;
-  border-radius: 8px;
-  margin: 12px 0;
+  border-radius: 16px;
+  display: block;
+}
+
+figcaption {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-top: 8px;
 }
 
 label {
   display: block;
   margin: 12px 0;
   font-weight: 600;
+  font-size: 14px;
 }
 
 label input,
-label textarea {
+label textarea,
+details textarea {
   display: block;
   width: 100%;
-  margin-top: 4px;
-  padding: 10px;
+  margin-top: 6px;
+  padding: 12px;
   font-size: 16px;
-  border: 1px solid #bbbbbb;
-  border-radius: 8px;
-  box-sizing: border-box;
+  font-family: inherit;
+  border: 1px solid #d6d3d1;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
 }
 
 .row {
@@ -56,39 +333,93 @@ label textarea {
   font-weight: 400;
 }
 
-.row input {
-  display: inline-block;
-}
-
-button {
-  background: #0f766e;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: #999999;
-}
-
 .hint {
-  color: #555555;
+  color: var(--muted);
   font-size: 14px;
+}
+
+details {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+details summary {
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+details textarea {
+  margin-top: 12px;
+}
+
+.catalog-section {
+  margin-top: 32px;
 }
 
 .item {
   display: flex;
   gap: 12px;
-  border-top: 1px solid #eeeeee;
-  padding: 12px 0;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--card);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+@media (hover: hover) {
+  .item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(28, 25, 23, 0.08);
+  }
 }
 
 .item img {
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   object-fit: cover;
-  margin: 0;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.item strong {
+  display: block;
+  font-size: 16px;
+}
+
+.item .price {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 2px 0 8px;
+}
+
+.item .pill {
+  margin: 0 0 8px;
+}
+
+.item p {
+  font-size: 14px;
+  margin: 6px 0;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

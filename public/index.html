@@ -4,49 +4,115 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DapurStudio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header>
-  <h1>DapurStudio</h1>
-  <p>Foto dapur jadi foto katalog, lengkap dengan estimasi biaya dan caption jualan.</p>
+<header class="app-header">
+  <p class="wordmark">Dapur <span>Studio</span></p>
+  <div class="avatar" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+  </div>
 </header>
 
 <main>
-  <section class="card">
-    <h2>Foto baru</h2>
-    <input id="photo" type="file" accept="image/*">
-    <img id="preview" alt="">
-    <button id="process">Proses jadi katalog</button>
-    <p id="status"></p>
+  <section class="hero">
+    <p class="pill">MADE FOR SMALL FOOD SELLERS</p>
+    <h1>Dari foto dapur, jadi katalog studio.</h1>
+    <p class="hero-sub">Foto makanan tetap asli. AI bantu rapikan background dan siapkan jualan.</p>
+    <input id="photo" class="sr-only" type="file" accept="image/*">
+    <label class="btn-primary" for="photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+      <span id="upload-label">Unggah foto makanan</span>
+    </label>
+    <img id="preview" alt="" hidden>
+    <button class="btn-primary" id="process" disabled>
+      <span class="spinner" hidden></span>
+      <span id="process-label">Proses jadi katalog</span>
+    </button>
+    <p id="status" role="status"></p>
+  </section>
+
+  <section class="features">
+    <h2>SEMUA DALAM SATU TEMPAT</h2>
+    <div class="feature-row">
+      <article class="feature">
+        <span class="feature-num">01</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <strong>Foto studio</strong>
+        <span>Otomatis</span>
+      </article>
+      <article class="feature">
+        <span class="feature-num">02</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.2c0 3 6 1.4 6 4.6 0 1.2-1.3 2.2-3 2.2s-3-1.1-3-2.5"/></svg>
+        <strong>Modal bahan</strong>
+        <span>Otomatis</span>
+      </article>
+      <article class="feature">
+        <span class="feature-num">03</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/><path d="M8 11h8M8 14h5"/></svg>
+        <strong>Caption AI</strong>
+        <span>Otomatis</span>
+      </article>
+    </div>
   </section>
 
   <section class="card" id="result" hidden>
     <h2>Hasil katalog</h2>
-    <img id="result-image" alt="Foto katalog">
-    <label>Hidangan
-      <input id="dish" type="text">
-    </label>
-    <label>Estimasi biaya bahan (Rp)
-      <span class="row">
-        <input id="cost-min" type="number"> <span>sampai</span> <input id="cost-max" type="number">
-      </span>
-    </label>
-    <label>Bahan utama (satu baris per bahan: Item | bahan: takaran)
-      <textarea id="ingredients" rows="5"></textarea>
-    </label>
-    <label>Caption jualan
-      <textarea id="caption" rows="4"></textarea>
-    </label>
+    <div class="tabs" role="tablist" aria-label="Bagian hasil">
+      <button role="tab" aria-selected="true" data-tab="panel-foto">Foto</button>
+      <button role="tab" aria-selected="false" data-tab="panel-biaya">Biaya</button>
+      <button role="tab" aria-selected="false" data-tab="panel-caption">Caption</button>
+    </div>
+
+    <div id="panel-foto" role="tabpanel">
+      <figure>
+        <img id="original-image" alt="Foto dapur asli">
+        <figcaption>SEBELUM</figcaption>
+      </figure>
+      <figure>
+        <img id="result-image" alt="Foto katalog">
+        <figcaption>SESUDAH</figcaption>
+      </figure>
+    </div>
+
+    <div id="panel-biaya" role="tabpanel" hidden>
+      <label>Hidangan
+        <input id="dish" type="text">
+      </label>
+      <label>Estimasi biaya bahan (Rp)
+        <span class="row">
+          <input id="cost-min" type="number" inputmode="numeric"> <span>sampai</span> <input id="cost-max" type="number" inputmode="numeric">
+        </span>
+      </label>
+      <details>
+        <summary>Bahan utama</summary>
+        <label class="sr-only" for="ingredients">Bahan utama, satu baris per bahan: Item, bahan, takaran</label>
+        <textarea id="ingredients" rows="5"></textarea>
+      </details>
+    </div>
+
+    <div id="panel-caption" role="tabpanel" hidden>
+      <label>Caption jualan
+        <textarea id="caption" rows="4"></textarea>
+      </label>
+    </div>
+
     <p class="hint">Periksa dan koreksi dulu sebelum simpan. Estimasi biaya adalah rentang, bukan angka pasti.</p>
-    <button id="save">Simpan ke katalog</button>
+    <button class="btn-primary" id="save">Simpan ke katalog</button>
   </section>
 
-  <section class="card">
-    <h2>Katalog</h2>
+  <section class="catalog-section">
+    <h2>Terakhir dibuat</h2>
     <div id="catalog"></div>
   </section>
 </main>
+
+<footer>
+  <p>DapurStudio, dibuat selama hackathon.</p>
+</footer>
 
 <script src="/app.js"></script>
 </body>

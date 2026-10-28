@@ -33,6 +33,15 @@ dibuat selama hackathon.
 6. Penjual mengoreksi hidangan, biaya, bahan, dan caption, lalu menyimpan ke
    katalog.
 
+## Antarmuka
+
+Mobile-first, bahasa visual dari board Figma "DapurStudio • Responsive UI
+exploration": hero peach, tombol oranye, kartu fitur, tab hasil
+Foto/Biaya/Caption, kartu katalog dengan pill Siap katalog. Tanpa emoji,
+ikon SVG gaya iOS, font SF Pro di perangkat Apple dan Inter di Android
+sebagai padanan visualnya (SF Pro tidak tersedia di Android). Palette
+dipegang satu variabel CSS `--brand` di `public/style.css`.
+
 ## Teknologi
 
 - Bun (satu server: frontend statis + API + katalog file JSON).
