@@ -1,6 +1,11 @@
 /* DapurStudio visual decisions, one line each (antislop R-31):
    - Orange brand (#C2410C): Figma board palette, warm seller identity, one accent only.
    - Peach hero (#FFF1E6): Figma hero card, marks the upload moment apart from the rest.
+   - Cream page (#FFFAF5): mockup presentation background, warm without stealing the hero.
+   - Pill buttons (999px, 52px tall): mockup primary actions, one thumb target, no dead controls.
+   - Stepper on the pipeline card: the five real server stages, checked as they finish,
+     so the wait shows work instead of a spinner.
+   - Green "Siap katalog" pill: mockup ready state, distinct from the orange brand.
    - SF Pro stack, Inter after it: user rule is iOS font; Apple devices render real SF Pro,
      Android falls back to Inter, the closest open lookalike, since SF Pro is not on Android.
    - 480px column: Figma iPhone frame is 393px wide; sellers work from phones.
@@ -9,6 +14,7 @@
    - Before/after stacked with labels: at phone width side-by-side shrinks both photos too far.
    - No bottom nav: no settings destination exists, and a dead control is worse than none.
    - No sample-photo button: the original kitchen photo is not cleared for the public repo yet.
+   - No footer attribution: hackathon context belongs in the submission panel, not the product UI.
    Dials: ENERGY 2 / RHYTHM 2 / MOTION 1 (balanced, iOS-calm, hover states and one spinner only).
 */
 
@@ -21,7 +27,10 @@
   --muted: #57534e;
   --line: #e7e5e4;
   --card: #ffffff;
-  --bg: #ffffff;
+  --bg: #fffaf5;
+  --green-bg: #dcfce7;
+  --green-text: #166534;
+  --soft-shadow: 0 4px 16px rgba(28, 25, 23, 0.06);
 }
 
 * {
@@ -59,6 +68,9 @@ body {
 }
 
 .wordmark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -69,20 +81,21 @@ body {
   color: var(--brand);
 }
 
-.avatar {
+.logo-mark {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  background: var(--peach);
-  color: var(--brand);
+  border-radius: 12px;
+  background: var(--brand);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.avatar svg {
-  width: 20px;
-  height: 20px;
+.logo-mark svg {
+  width: 22px;
+  height: 22px;
 }
 
 .hero {
@@ -122,11 +135,11 @@ body {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  min-height: 48px;
+  min-height: 52px;
   background: var(--brand);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: 999px;
   padding: 12px 20px;
   font-size: 16px;
   font-weight: 600;
@@ -189,8 +202,73 @@ body {
   }
 }
 
+.stepper {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.stepper li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.stepper li + li {
+  border-top: 1px solid var(--line);
+}
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.stepper li.active {
+  color: var(--ink);
+}
+
+.stepper li.active .step-num {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.stepper li.done {
+  color: var(--ink);
+}
+
+.stepper li.done .step-num {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+.cost-hero {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 4px 0 12px;
+}
+
 .features {
   margin-top: 32px;
+}
+
+#pipeline {
+  margin-top: 20px;
 }
 
 .features h2,
@@ -211,9 +289,10 @@ body {
 .feature {
   flex: 1;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 12px;
   background: var(--card);
+  box-shadow: var(--soft-shadow);
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
@@ -258,6 +337,7 @@ body {
   padding: 16px;
   margin-top: 32px;
   background: var(--card);
+  box-shadow: var(--soft-shadow);
 }
 
 .tabs {
@@ -370,6 +450,7 @@ details textarea {
   padding: 12px;
   margin-bottom: 12px;
   background: var(--card);
+  box-shadow: var(--soft-shadow);
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
@@ -401,18 +482,19 @@ details textarea {
 
 .item .pill {
   margin: 0 0 8px;
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.item .saved {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 8px;
 }
 
 .item p {
   font-size: 14px;
   margin: 6px 0;
-}
-
-footer {
-  text-align: center;
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 32px;
 }
 
 @media (prefers-reduced-motion: reduce) {

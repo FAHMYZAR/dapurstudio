@@ -46,6 +46,9 @@ async function runCli(args: string[]): Promise<any> {
 }
 
 async function post(path: string, payload: unknown): Promise<any> {
+  // Timeout di bawah batas 100 detik Cloudflare: kalau Meta menggantung,
+  // server mengembalikan JSON error yang bersih, bukan koneksi yang diputus
+  // di tengah jalan lalu berubah jadi halaman HTML di depan.
   const res = await fetch(BASE + path, {
     method: "POST",
     headers: {
@@ -53,6 +56,7 @@ async function post(path: string, payload: unknown): Promise<any> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(90_000),
   });
   if (!res.ok) throw new Error(`Meta API ${path} -> HTTP ${res.status}`);
   return res.json();

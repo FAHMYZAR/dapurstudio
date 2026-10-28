@@ -4,7 +4,7 @@
 // Pipeline for POST /api/process (the "one set" rule: everything the seller
 // photographed as one serving stays in the result):
 //   1. SAM 3.1 segments each serving prompt; masks are unioned.
-//   2. Muse Image generates a studio backdrop.
+//   2. Muse Image backdrop template (generated once, reviewed, reused).
 //   3. scripts/image_worker.py composites the set onto the backdrop.
 //   4. Muse Spark identifies the dish, estimates an ingredient cost range,
 //      and writes an Indonesian sales caption.
@@ -19,6 +19,11 @@ import { estimate, generateBackdrop, samSegment } from "./lib/meta";
 const PORT = Number(Bun.env.PORT || 3000);
 const UPLOADS = "uploads";
 const CATALOG = "data/catalog.json";
+
+// Pipeline progress for the UI stepper (GET /api/progress): how many of the
+// five pipeline steps have finished for the latest process request. One
+// process, one value: fine for a single-seller test deploy, not per-user.
+let progressDone = 0;
 
 // Serving prompts, tried in parallel. A prompt that finds nothing is skipped;
 // the union keeps every serving object the photo actually contains.
@@ -88,6 +93,10 @@ const server = Bun.serve({
       return json({ ok: true, service: "dapurstudio" });
     }
 
+    if (path === "/api/progress") {
+      return json({ done: progressDone });
+    }
+
     if (path === "/api/catalog" && req.method === "GET") {
       return json(await readCatalog());
     }
@@ -107,6 +116,7 @@ const server = Bun.serve({
 
     if (path === "/api/process" && req.method === "POST") {
       try {
+        progressDone = 0;
         const form = await req.formData();
         const photo = form.get("photo");
         if (!(photo instanceof File)) {
@@ -116,6 +126,7 @@ const server = Bun.serve({
         const ext = photo.type === "image/png" ? "png" : "jpg";
         const originalPath = `${UPLOADS}/${id}.${ext}`;
         await Bun.write(originalPath, photo);
+        progressDone = 1;
 
         const texts = await Promise.all(
           SERVING_PROMPTS.map((prompt) =>
@@ -123,6 +134,7 @@ const server = Bun.serve({
           ),
         );
         const samTexts = texts.filter(Boolean);
+        progressDone = 2;
         // Validated template first: one flat backdrop, generated once and
         // reviewed, reused for every photo. Generating a fresh backdrop per
         // photo wasted $0.01 and a call, and could come back non-empty.
@@ -133,6 +145,7 @@ const server = Bun.serve({
         if (backdropPath !== template) {
           await Bun.write(backdropPath, await generateBackdrop());
         }
+        progressDone = 3;
         const catalogPath = `${UPLOADS}/${id}-catalog.png`;
         const worker = await runWorker({
           original: originalPath,
@@ -146,7 +159,9 @@ const server = Bun.serve({
             422,
           );
         }
+        progressDone = 4;
         const result = await estimate(originalPath);
+        progressDone = 5;
         return json({
           imageUrl: `/${catalogPath}`,
           dish: result.dish,

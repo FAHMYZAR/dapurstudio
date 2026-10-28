@@ -11,10 +11,7 @@
 </head>
 <body>
 <header class="app-header">
-  <p class="wordmark">Dapur <span>Studio</span></p>
-  <div class="avatar" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
-  </div>
+  <p class="wordmark"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16"/><path d="M6 11h12v4a6 6 0 0 1-12 0v-4z"/><path d="M9 7.5c0-1 1-1 1-2M14 7.5c0-1 1-1 1-2"/></svg></span>Dapur <span>Studio</span></p>
 </header>
 
 <main>
@@ -33,6 +30,17 @@
       <span id="process-label">Proses jadi katalog</span>
     </button>
     <p id="status" role="status"></p>
+  </section>
+
+  <section class="card" id="pipeline" hidden>
+    <h2>ALUR AI</h2>
+    <ol class="stepper" aria-label="Alur AI">
+      <li id="step-1"><span class="step-num">1</span><span>Unggah Foto</span></li>
+      <li id="step-2"><span class="step-num">2</span><span>SAM 3.1 Deteksi Objek</span></li>
+      <li id="step-3"><span class="step-num">3</span><span>Muse Image Backdrop</span></li>
+      <li id="step-4"><span class="step-num">4</span><span>Compose Tata Elemen</span></li>
+      <li id="step-5"><span class="step-num">5</span><span>Muse Spark Hasil Siap Pakai</span></li>
+    </ol>
   </section>
 
   <section class="features">
@@ -79,6 +87,7 @@
     </div>
 
     <div id="panel-biaya" role="tabpanel" hidden>
+      <p class="cost-hero" id="cost-hero"></p>
       <label>Hidangan
         <input id="dish" type="text">
       </label>
@@ -109,10 +118,6 @@
     <div id="catalog"></div>
   </section>
 </main>
-
-<footer>
-  <p>DapurStudio, dibuat selama hackathon.</p>
-</footer>
 
 <script src="/app.js"></script>
 </body>
