@@ -26,8 +26,12 @@ $("process").addEventListener("click", async () => {
     $("dish").value = data.dish;
     $("cost-min").value = data.costRangeIdr.min;
     $("cost-max").value = data.costRangeIdr.max;
-    $("ingredients").value = data.ingredients
-      .map((item) => `${item.name}: ${item.amount}`)
+    $("ingredients").value = data.items
+      .flatMap((group) =>
+        group.ingredients.map(
+          (item) => `${group.name} | ${item.name}: ${item.amount}`,
+        ),
+      )
       .join("\n");
     $("caption").value = data.caption;
     $("result").hidden = false;
@@ -41,6 +45,19 @@ $("process").addEventListener("click", async () => {
 
 $("save").addEventListener("click", async () => {
   if (!current) return;
+  const groups = new Map();
+  for (const line of $("ingredients").value.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const [groupName, rest] = trimmed.includes(" | ")
+      ? trimmed.split(" | ", 2)
+      : ["Lainnya", trimmed];
+    const sep = rest.lastIndexOf(": ");
+    const name = sep >= 0 ? rest.slice(0, sep) : rest;
+    const amount = sep >= 0 ? rest.slice(sep + 2) : "";
+    if (!groups.has(groupName)) groups.set(groupName, []);
+    groups.get(groupName).push({ name, amount });
+  }
   const item = {
     imageUrl: current.imageUrl,
     dish: $("dish").value,
@@ -48,7 +65,10 @@ $("save").addEventListener("click", async () => {
       min: Number($("cost-min").value),
       max: Number($("cost-max").value),
     },
-    ingredients: $("ingredients").value,
+    items: [...groups.entries()].map(([name, ingredients]) => ({
+      name,
+      ingredients,
+    })),
     caption: $("caption").value,
   };
   await fetch("/api/catalog", {
@@ -62,6 +82,18 @@ $("save").addEventListener("click", async () => {
 
 async function loadCatalog() {
   const items = await (await fetch("/api/catalog")).json();
+  const renderItems = (item) => {
+    if (typeof item.items === "string") return `<p>${item.items}</p>`;
+    if (!Array.isArray(item.items)) return "";
+    return item.items
+      .map(
+        (group) =>
+          `<p><strong>${group.name}</strong><br>${group.ingredients
+            .map((entry) => `${entry.name}: ${entry.amount}`)
+            .join("<br>")}</p>`,
+      )
+      .join("");
+  };
   $("catalog").innerHTML = items.length
     ? items
         .map(
@@ -71,6 +103,7 @@ async function loadCatalog() {
         <div>
           <strong>${item.dish}</strong>
           <p>Rp ${item.costRangeIdr.min.toLocaleString("id-ID")} - Rp ${item.costRangeIdr.max.toLocaleString("id-ID")}</p>
+          ${renderItems(item)}
           <p>${item.caption}</p>
         </div>
       </article>`,

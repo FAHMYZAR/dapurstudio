@@ -15,9 +15,13 @@
 import { unlink } from "node:fs/promises";
 
 const BASE = "https://api.meta.ai/v1";
+// Flat on purpose: the worker draws the only shadow. Asking the backdrop
+// for its own shadow area produced two unaligned shadow sources.
 const STUDIO_PROMPT =
-  "Clean bright professional food photography studio backdrop, seamless soft light gray background, gentle soft shadow area in the lower center, empty, minimalist, high-end catalog style, no food, no objects, no text";
-const ESTIMATE_PROMPT = `Lihat foto ini. Ini sepiring makanan. Jawab dalam JSON saja, tanpa teks lain: {"dish": "nama hidangan", "ingredients": [{"name": "...", "amount": "..."}], "cost_range_idr": {"min": ..., "max": ...}, "caption_id": "..."}. Aturan: ingredients adalah bahan utama untuk membuat satu piring seperti di foto dengan takaran perkiraan; cost_range_idr adalah rentang estimasi biaya bahan dalam Rupiah untuk satu piring itu di harga pasar Indonesia (bukan harga jual, bukan angka pasti); caption_id adalah caption jualan Bahasa Indonesia yang santai dan menggugah selera, 2-3 kalimat, sebut nama hidangannya.`;
+  "Clean bright professional food photography studio backdrop, seamless flat light gray background, even lighting, no shadows, empty, minimalist, high-end catalog style, no food, no objects, no text";
+// The estimate covers the WHOLE serving set, food and drink separated.
+// An earlier version assumed one plate and silently dropped the drink.
+const ESTIMATE_PROMPT = `Lihat foto ini. Ini satu set sajian: makanan dan minuman pendampingnya. Jawab dalam JSON saja, tanpa teks lain: {"dish": "nama hidangan utama", "items": [{"name": "nama item sajian", "ingredients": [{"name": "...", "amount": "..."}]}], "cost_range_idr": {"min": ..., "max": ...}, "caption_id": "..."}. Aturan: items mencakup SEMUA item sajian di foto, makanan dan minuman dipisah per item; ingredients adalah bahan utama per item dengan takaran perkiraan; cost_range_idr adalah rentang estimasi biaya bahan SELURUH set dalam Rupiah di harga pasar Indonesia (bukan harga jual, bukan angka pasti); caption_id adalah caption jualan Bahasa Indonesia yang santai dan menggugah selera, 2-3 kalimat, sebut hidangan dan minumannya.`;
 
 function cli(): string | null {
   return Bun.env.META_CLI || null;
@@ -116,7 +120,7 @@ export async function generateBackdrop(): Promise<Buffer> {
 
 export interface Estimate {
   dish: string;
-  ingredients: { name: string; amount: string }[];
+  items: { name: string; ingredients: { name: string; amount: string }[] }[];
   cost_range_idr: { min: number; max: number };
   caption_id: string;
 }
@@ -161,7 +165,13 @@ export async function estimate(imagePath: string): Promise<Estimate> {
     content = data.choices[0].message.content;
   }
   const parsed = JSON.parse(content);
-  if (!parsed.dish || !parsed.cost_range_idr || !parsed.caption_id) {
+  if (
+    !parsed.dish ||
+    !Array.isArray(parsed.items) ||
+    parsed.items.length === 0 ||
+    !parsed.cost_range_idr ||
+    !parsed.caption_id
+  ) {
     throw new Error("Spark mengembalikan JSON tak lengkap");
   }
   return parsed as Estimate;

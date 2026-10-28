@@ -123,8 +123,16 @@ const server = Bun.serve({
           ),
         );
         const samTexts = texts.filter(Boolean);
-        const backdropPath = `${UPLOADS}/${id}-backdrop.png`;
-        await Bun.write(backdropPath, await generateBackdrop());
+        // Validated template first: one flat backdrop, generated once and
+        // reviewed, reused for every photo. Generating a fresh backdrop per
+        // photo wasted $0.01 and a call, and could come back non-empty.
+        const template = "assets/backdrops/studio-light-gray.png";
+        const backdropPath = (await Bun.file(template).exists())
+          ? template
+          : `${UPLOADS}/${id}-backdrop.png`;
+        if (backdropPath !== template) {
+          await Bun.write(backdropPath, await generateBackdrop());
+        }
         const catalogPath = `${UPLOADS}/${id}-catalog.png`;
         const worker = await runWorker({
           original: originalPath,
@@ -142,7 +150,7 @@ const server = Bun.serve({
         return json({
           imageUrl: `/${catalogPath}`,
           dish: result.dish,
-          ingredients: result.ingredients,
+          items: result.items,
           costRangeIdr: result.cost_range_idr,
           caption: result.caption_id,
         });

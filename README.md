@@ -19,12 +19,18 @@ dibuat selama hackathon.
    "plate of food", "coffee mug", "glass", "cup". Catatan prompt: "plate of
    food" saja hanya memotong cincin piring (makanan jadi lubang), jadi
    prompt perakit hidangan wajib ikut dalam gabungan.
-3. Muse Image membuat backdrop studio, lalu potongan set ditempel di atasnya
-   dengan bayangan lunak.
-4. Muse Spark mengidentifikasi hidangan, menyusun bahan utama, mengestimasi
-   biaya bahan sebagai rentang Rupiah, dan menulis caption jualan Bahasa
-   Indonesia.
-5. Penjual mengoreksi hidangan, biaya, bahan, dan caption, lalu menyimpan ke
+3. Validasi set: mask dikelompokkan berdasarkan kedekatan. Mask terbesar
+   menjadi klaster awal, dan hanya mask yang menyentuh klaster (dalam 25
+   piksel) yang dipertahankan. Peralatan dapur yang jauh dari sajian, yang
+   bisa saja cocok dengan prompt generik seperti "cup", ikut dibuang.
+4. Tepi mask diperhalus (erosi 1 piksel, blur 0,8), lalu potongan set
+   ditempel di atas template backdrop studio yang sudah divalidasi, dengan
+   satu bayangan lunak dari kode. Set dibatasi 82 persen lebar dan 80
+   persen tinggi backdrop, aspect ratio dipertahankan.
+5. Muse Spark mengidentifikasi seluruh set (makanan dan minuman dipisah per
+   item), menyusun bahan utama per item, mengestimasi biaya bahan seluruh
+   set sebagai rentang Rupiah, dan menulis caption jualan Bahasa Indonesia.
+6. Penjual mengoreksi hidangan, biaya, bahan, dan caption, lalu menyimpan ke
    katalog.
 
 ## Teknologi
@@ -53,7 +59,7 @@ memakai helper itu untuk panggilan Meta dan worker.
 
 - `GET /api/health`
 - `POST /api/process` (form-data field `photo`) → foto katalog, hidangan,
-  bahan, rentang biaya, caption.
+  item sajian beserta bahannya, rentang biaya seluruh set, caption.
 - `GET /api/catalog`, `POST /api/catalog` (koreksi seller ikut tersimpan).
 
 ## Aset demo
