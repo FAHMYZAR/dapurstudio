@@ -17,6 +17,15 @@
    - No bottom nav: no settings destination exists, and a dead control is worse than none.
    - No sample-photo button: the original kitchen photo is not cleared for the public repo yet.
    - No footer attribution: hackathon context belongs in the submission panel, not the product UI.
+   - Crop editor (langkah 3): the crop box sits over the photo with a dimmed
+     outside (box-shadow), corner handles are 28px for thumbs, touch-action
+     none so a drag never scrolls the page on phones.
+   - Adjust compare (langkah 2): side-by-side SAAT INI / PRATINJAU figures,
+     chosen over the stacked before/after pattern so both are visible at
+     once; the expand warning and review badge carry the small differences
+     a shrunken photo would hide.
+   - Review badge: orange "Perlu direview" is a warning, never a failure;
+     green "Siap katalog" only shows when no warning fired.
    Dials: ENERGY 2 / RHYTHM 2 / MOTION 1 (balanced, iOS-calm, hover states and one spinner only).
 */
 
@@ -497,4 +506,247 @@ details textarea {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Langkah 2 + 3: crop editor dan panel penyesuaian. */
+
+#crop-wrap {
+  margin-top: 16px;
+}
+
+#crop-stage {
+  position: relative;
+  touch-action: none;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000000;
+}
+
+#crop-stage img {
+  display: block;
+  width: 100%;
+}
+
+#crop-box {
+  position: absolute;
+  border: 2px solid var(--brand);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  touch-action: none;
+  cursor: move;
+}
+
+.crop-handle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background: #ffffff;
+  border: 2px solid var(--brand);
+  border-radius: 50%;
+  touch-action: none;
+}
+
+.crop-handle[data-handle="nw"] {
+  left: -14px;
+  top: -14px;
+  cursor: nwse-resize;
+}
+
+.crop-handle[data-handle="ne"] {
+  right: -14px;
+  top: -14px;
+  cursor: nesw-resize;
+}
+
+.crop-handle[data-handle="sw"] {
+  left: -14px;
+  bottom: -14px;
+  cursor: nesw-resize;
+}
+
+.crop-handle[data-handle="se"] {
+  right: -14px;
+  bottom: -14px;
+  cursor: nwse-resize;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-secondary:disabled,
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-row {
+  margin: 16px 0 8px;
+}
+
+.btn-row .btn-primary {
+  flex: 1;
+}
+
+#adjust h3 {
+  font-size: 16px;
+  margin: 4px 0 8px;
+}
+
+#adjust input[type="range"] {
+  flex: 1;
+  accent-color: var(--brand);
+  margin-top: 0;
+}
+
+.badge-review {
+  display: inline-block;
+  background: var(--peach);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.badge-ok {
+  display: inline-block;
+  background: var(--green-bg);
+  color: var(--green-text);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+#review-reasons {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+#review-reasons li + li {
+  margin-top: 4px;
+}
+
+.warn {
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+#compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+#compare figure {
+  margin: 0;
+}
+
+/* Panduan foto: kartu putih di hero, di atas tombol unggah, agar dibaca
+   sebelum foto diambil. Contoh gambar selebar kartu supaya tetap terbaca
+   di 480px; label Benar/Salah ada di caption, bukan cuma warna. */
+.guide {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 16px;
+  margin: 16px 0 4px;
+  text-align: left;
+}
+.guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.guide-head h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.guide-close {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+.guide h3 {
+  font-size: 15px;
+  margin: 20px 0 8px;
+}
+.guide-intro,
+.guide-note {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+.guide-rules {
+  font-size: 14px;
+  margin: 0;
+  padding-left: 20px;
+}
+.guide-rules li + li {
+  margin-top: 6px;
+}
+.guide-example {
+  margin: 12px 0 0;
+}
+.guide-example img {
+  border-radius: 16px;
+  display: block;
+  width: 100%;
+}
+.guide-example figcaption {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+.guide-example figcaption strong {
+  color: var(--ink);
+}
+.guide-good img {
+  outline: 2px solid var(--green-text);
+  outline-offset: -2px;
+}
+.guide-bad img {
+  outline: 2px solid #b91c1c;
+  outline-offset: -2px;
+}
+.guide-reopen {
+  background: none;
+  border: none;
+  color: var(--brand);
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 12px auto 0;
+  padding: 8px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

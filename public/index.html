@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="/logo.png?v=1">
-<link rel="stylesheet" href="/style.css?v=3">
+<link rel="stylesheet" href="/style.css?v=6">
 </head>
 <body>
 <header class="app-header">
@@ -19,12 +19,68 @@
   <section class="hero">
     <h1>Dari foto dapur, jadi katalog studio.</h1>
     <p class="hero-sub">Foto makanan tetap asli. AI bantu rapikan background dan siapkan jualan.</p>
+    <section class="guide" id="guide" aria-label="Panduan foto">
+      <div class="guide-head">
+        <h2>Panduan foto</h2>
+        <button class="guide-close" id="guide-close" type="button">Tutup</button>
+      </div>
+      <p class="guide-intro">Luangkan satu menit sebelum memotret. Bagian makanan yang terpotong frame atau tertutup tangan tidak bisa dikembalikan oleh AI, jadi foto awalnya harus sudah benar.</p>
+      <h3>1. Cara foto yang benar</h3>
+      <ul class="guide-rules">
+        <li>Satu sajian per foto.</li>
+        <li>Piring dan makanan utuh, jangan menyentuh tepi frame.</li>
+        <li>Ambil dari atas atau agak miring.</li>
+        <li>Latar dapur yang berantakan tidak masalah.</li>
+        <li>Jangan ada piring, gelas, atau wadah lain yang terpotong di pinggir foto.</li>
+        <li>Sendok jangan menjulur keluar mangkuk.</li>
+        <li>Kalau satu set memang termasuk nasi dan minuman, keduanya harus ikut utuh di frame. Kalau tidak, hapus nasi atau minuman itu dari teks dan harga sebelum simpan ke katalog.</li>
+      </ul>
+      <h3>2. Contoh benar dan salah</h3>
+      <figure class="guide-example guide-good">
+        <img src="/guide/good-untir.jpg" alt="Foto Untir-Untir yang benar" loading="lazy">
+        <figcaption><strong>Benar.</strong> Satu piring jadi subjek utama, ditambah gelas kopi, dengan latar dapur asli. Foto ini lolos jadi katalog.</figcaption>
+      </figure>
+      <figure class="guide-example guide-bad">
+        <img src="/guide/bad-garang-original.jpg" alt="Foto Garang Asem yang salah" loading="lazy">
+        <figcaption><strong>Salah.</strong> Wadah nasi di kiri bawah, gelas di atas, dan piring di kanan atas semuanya terpotong frame.</figcaption>
+      </figure>
+      <figure class="guide-example guide-bad">
+        <img src="/guide/bad-garang-result.jpg" alt="Hasil Garang Asem yang nasinya hilang" loading="lazy">
+        <figcaption><strong>Akibatnya.</strong> Nasi hilang total dari hasil, tapi caption dan harga tetap menjanjikan nasi dan teh. Foto seperti ini tidak layak jadi katalog apa adanya.</figcaption>
+      </figure>
+      <figure class="guide-example guide-bad">
+        <img src="/guide/bad-seblak-original.jpg" alt="Foto seblak dari tangkapan layar yang salah" loading="lazy">
+        <figcaption><strong>Salah.</strong> Ini tangkapan layar, bukan foto langsung: banner dan bar aplikasi ikut masuk, dan tangan menutupi tepi mangkuk. Bagian yang tertutup tangan itu tidak kembali di hasil.</figcaption>
+      </figure>
+      <h3>3. Hasil yang bakal didapat</h3>
+      <figure class="guide-example guide-result">
+        <img src="/guide/good-untir-result.jpg" alt="Contoh hasil katalog Untir-Untir" loading="lazy">
+        <figcaption><strong>Contoh hasil dari foto yang benar.</strong> Kue Untir-Untir Goreng / Kue Tambang, Rp10.000 - Rp17.000, dengan caption jualan. Foto jadi di backdrop studio, lalu penjual memeriksa nama, harga, dan caption sebelum simpan.</figcaption>
+      </figure>
+      <p class="guide-note">Harga dan caption bisa diedit sebelum simpan, karena hasil AI bisa berbeda tiap proses. Panduan ini membantu foto lolos, bukan menjamin hasil selalu sempurna. Kalau masih ada yang terpotong, hasil akan ditandai <span class="badge-review">Perlu direview</span>, bukan langsung gagal.</p>
+      <p class="guide-note">Aplikasi ini hanya memproses foto makanan dan minuman. Foto di luar itu akan ditolak dan tidak disimpan sebagai katalog.</p>
+    </section>
     <input id="photo" class="sr-only" type="file" accept="image/*">
     <label class="btn-primary" for="photo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
       <span id="upload-label">Unggah foto makanan</span>
     </label>
+    <button class="guide-reopen" id="guide-reopen" type="button">Lihat panduan foto</button>
     <img id="preview" alt="" hidden>
+    <div id="crop-wrap" hidden>
+      <div id="crop-stage">
+        <img id="crop-img" alt="Foto yang akan diproses">
+        <div id="crop-box" role="application" aria-label="Area crop">
+          <div class="crop-handle" data-handle="nw"></div>
+          <div class="crop-handle" data-handle="ne"></div>
+          <div class="crop-handle" data-handle="sw"></div>
+          <div class="crop-handle" data-handle="se"></div>
+        </div>
+      </div>
+      <p class="hint">Geser kotak untuk memilih area foto, tarik sudutnya untuk mengubah ukuran. Biarkan penuh kalau tidak perlu crop.</p>
+      <button class="btn-secondary" id="crop-reset" type="button">Kembalikan crop penuh</button>
+      <p id="crop-note" class="warn" hidden></p>
+    </div>
     <button class="btn-primary" id="process" disabled>
       <span class="spinner" hidden></span>
       <span id="process-label">Proses jadi katalog</span>
@@ -109,6 +165,52 @@
       </label>
     </div>
 
+    <div id="adjust" hidden>
+      <h3>Penyesuaian potongan</h3>
+      <p id="pipeline-status"></p>
+      <div id="review-box" hidden>
+        <p><span class="badge-review">Perlu direview</span></p>
+        <ul id="review-reasons"></ul>
+      </div>
+      <p id="review-ok" hidden><span class="badge-ok">Siap katalog</span></p>
+      <label>Perbesar atau perkecil mask (expand)
+        <span class="row">
+          <input id="adj-expand" type="range" min="-20" max="20" step="1" value="0">
+          <span id="adj-expand-val">0 px</span>
+        </span>
+      </label>
+      <p class="hint">Expand memperbesar mask; nilai besar bisa menarik background. Periksa pratinjau sebelum simpan.</p>
+      <p id="expand-warning" class="warn" hidden></p>
+      <label>Intensitas bayangan
+        <span class="row">
+          <input id="adj-strength" type="range" min="0" max="255" step="1" value="140">
+          <span id="adj-strength-val">140</span>
+        </span>
+      </label>
+      <label>Blur bayangan
+        <span class="row">
+          <input id="adj-blur" type="range" min="0" max="100" step="1" value="30">
+          <span id="adj-blur-val">30</span>
+        </span>
+      </label>
+      <div class="row btn-row">
+        <button class="btn-secondary" id="adj-preview" type="button">Pratinjau</button>
+        <button class="btn-secondary" id="adj-reset" type="button">Reset</button>
+        <button class="btn-primary" id="adj-save" type="button">Simpan penyesuaian</button>
+      </div>
+      <div id="compare" hidden>
+        <figure>
+          <img id="compare-final" alt="Hasil saat ini">
+          <figcaption>SAAT INI</figcaption>
+        </figure>
+        <figure>
+          <img id="compare-preview" alt="Pratinjau penyesuaian">
+          <figcaption>PRATINJAU</figcaption>
+        </figure>
+      </div>
+      <p id="adjust-note" class="hint"></p>
+    </div>
+
     <p class="hint">Periksa dan koreksi dulu sebelum simpan. Estimasi biaya adalah rentang, bukan angka pasti.</p>
     <button class="btn-primary" id="save">Simpan ke katalog</button>
   </section>
@@ -119,6 +221,6 @@
   </section>
 </main>
 
-<script src="/app.js?v=2"></script>
+<script src="/app.js?v=5"></script>
 </body>
 </html>

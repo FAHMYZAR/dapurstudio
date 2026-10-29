@@ -76,6 +76,32 @@ memakai helper itu untuk panggilan Meta dan worker.
 `assets/demo/dapurstudio-catalog-2.png`: sepiring Kue Untir-Untir dan gelas
 kopi dari foto dapur berantakan, estimasi biaya bahan Rp 8.000-15.000.
 
+## Fitur setelah rilis awal
+
+- Panduan foto di beranda, sebelum tombol unggah: cara foto yang benar,
+  contoh benar dan salah dari foto yang sudah dites, dan hasil yang
+  diharapkan. Panduan bisa ditutup dan dibuka lagi.
+- Penyesuaian hasil: slider expand mask, intensitas dan blur bayangan,
+  dengan pratinjau, reset, dan simpan. Status proses dibedakan dari status
+  review: proses bisa sukses secara teknis tapi tetap ditandai perlu
+  direview bila sajian menyentuh tepi, ada deteksi yang terbuang, atau
+  mask membesar. Expand besar bisa menarik background, jadi pratinjau dan
+  peringatan tidak boleh diabaikan.
+- Crop sebelum proses: foto dipotong di perangkat sebelum dikirim ke SAM.
+  Bila crop berubah setelah proses, aplikasi meminta proses ulang, bukan
+  penyesuaian mask lama.
+- Gerbang konten: Spark menilai potongan hasil, bukan foto asli, supaya
+  teks dan harga tidak menjanjikan item yang sudah dibuang dari gambar.
+  Nama hidangan diambil dari foto asli, sedangkan item, harga, dan caption
+  ketat dari potongan; kalimat caption yang menyebut item pendamping yang
+  tidak ada di potongan akan dibuang. Foto bukan makanan atau minuman
+  ditolak dan direktori prosesnya dihapus. Gerbang ini best-effort, bukan
+  filter moderasi tersertifikasi.
+- Katalog hanya bisa disimpan dari proses foto yang valid. Penjual tetap
+  boleh mengedit hidangan, bahan, harga, dan caption secara manual sebelum
+  simpan. Nama hidangan dari AI bisa bervariasi antar proses, jadi koreksi
+  manual penjual adalah bagian dari alur, bukan pengecualian.
+
 ## Catatan lisensi
 
 Dependensi `meta-sam-parser` berada di bawah SAM License dari Meta.
