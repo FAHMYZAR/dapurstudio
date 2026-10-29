@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="/logo.png?v=1">
-<link rel="stylesheet" href="/style.css?v=6">
+<link rel="stylesheet" href="/style.css?v=7">
 </head>
 <body>
 <header class="app-header">
@@ -24,7 +24,7 @@
         <h2>Panduan foto</h2>
         <button class="guide-close" id="guide-close" type="button">Tutup</button>
       </div>
-      <p class="guide-intro">Luangkan satu menit sebelum memotret. Bagian makanan yang terpotong frame atau tertutup tangan tidak bisa dikembalikan oleh AI, jadi foto awalnya harus sudah benar.</p>
+      <p class="guide-intro">Luangkan satu menit sebelum memotret. Bagian makanan yang terpotong frame atau tertutup tangan tidak bisa dikembalikan oleh AI, jadi foto awalnya harus sudah benar. Potongannya disesuaikan otomatis oleh AI, jadi kamu tidak perlu mengatur apa pun.</p>
       <h3>1. Cara foto yang benar</h3>
       <ul class="guide-rules">
         <li>Satu sajian per foto.</li>
@@ -125,6 +125,11 @@
 
   <section class="card" id="result" hidden>
     <h2>Hasil katalog</h2>
+    <div id="advice-box" class="advice" hidden>
+      <p class="advice-title">Saran sebelum simpan</p>
+      <ul id="advice-list"></ul>
+    </div>
+
     <div class="tabs" role="tablist" aria-label="Bagian hasil">
       <button role="tab" aria-selected="true" data-tab="panel-foto">Foto</button>
       <button role="tab" aria-selected="false" data-tab="panel-biaya">Biaya</button>
@@ -165,54 +170,11 @@
       </label>
     </div>
 
-    <div id="adjust" hidden>
-      <h3>Penyesuaian potongan</h3>
-      <p id="pipeline-status"></p>
-      <div id="review-box" hidden>
-        <p><span class="badge-review">Perlu direview</span></p>
-        <ul id="review-reasons"></ul>
-      </div>
-      <p id="review-ok" hidden><span class="badge-ok">Siap katalog</span></p>
-      <label>Perbesar atau perkecil mask (expand)
-        <span class="row">
-          <input id="adj-expand" type="range" min="-20" max="20" step="1" value="0">
-          <span id="adj-expand-val">0 px</span>
-        </span>
-      </label>
-      <p class="hint">Expand memperbesar mask; nilai besar bisa menarik background. Periksa pratinjau sebelum simpan.</p>
-      <p id="expand-warning" class="warn" hidden></p>
-      <label>Intensitas bayangan
-        <span class="row">
-          <input id="adj-strength" type="range" min="0" max="255" step="1" value="140">
-          <span id="adj-strength-val">140</span>
-        </span>
-      </label>
-      <label>Blur bayangan
-        <span class="row">
-          <input id="adj-blur" type="range" min="0" max="100" step="1" value="30">
-          <span id="adj-blur-val">30</span>
-        </span>
-      </label>
-      <div class="row btn-row">
-        <button class="btn-secondary" id="adj-preview" type="button">Pratinjau</button>
-        <button class="btn-secondary" id="adj-reset" type="button">Reset</button>
-        <button class="btn-primary" id="adj-save" type="button">Simpan penyesuaian</button>
-      </div>
-      <div id="compare" hidden>
-        <figure>
-          <img id="compare-final" alt="Hasil saat ini">
-          <figcaption>SAAT INI</figcaption>
-        </figure>
-        <figure>
-          <img id="compare-preview" alt="Pratinjau penyesuaian">
-          <figcaption>PRATINJAU</figcaption>
-        </figure>
-      </div>
-      <p id="adjust-note" class="hint"></p>
-    </div>
-
     <p class="hint">Periksa dan koreksi dulu sebelum simpan. Estimasi biaya adalah rentang, bukan angka pasti.</p>
-    <button class="btn-primary" id="save">Simpan ke katalog</button>
+    <div class="row btn-row">
+      <button class="btn-primary" id="save">Simpan ke katalog</button>
+      <button class="btn-secondary" id="reshoot" type="button">Foto ulang</button>
+    </div>
   </section>
 
   <section class="catalog-section">
@@ -221,6 +183,6 @@
   </section>
 </main>
 
-<script src="/app.js?v=5"></script>
+<script src="/app.js?v=6"></script>
 </body>
 </html>

@@ -201,18 +201,39 @@ async function loadProcess(id: string): Promise<{
 }
 
 // --- Review status: warnings from raw metrics, never a pipeline failure. --
-function reviewFromMetrics(metrics: any): { needed: boolean; reasons: string[] } {
+// reasons = technical warnings (log/debug). advice = kalimat saran berbahasa
+// sehari-hari untuk pengguna dapur, diturunkan dari metrik yang sama. Saran
+// bukan vonis: hasil tetap ditampilkan dan tetap bisa disimpan.
+const SIDE_ID: Record<string, string> = {
+  left: "kiri",
+  right: "kanan",
+  top: "atas",
+  bottom: "bawah",
+};
+function reviewFromMetrics(metrics: any): {
+  needed: boolean;
+  reasons: string[];
+  advice: string[];
+} {
   const reasons: string[] = [];
+  const advice: string[] = [];
   const touch = metrics?.border_touch || {};
   const sides = ["left", "right", "top", "bottom"].filter((s) => touch[s]);
   if (sides.length > 0) {
     reasons.push(
       `Sajian menyentuh tepi foto (sisi: ${sides.join(", ")}), periksa apakah ada yang terpotong`,
     );
+    const idSides = sides.map((s) => SIDE_ID[s]).join(", ");
+    advice.push(
+      `Sajiannya kepotong di sisi ${idSides} — mundur sedikit biar masuk semua, lalu foto lagi.`,
+    );
   }
   if (typeof metrics?.masks_dropped === "number" && metrics.masks_dropped > 0) {
     reasons.push(
       `Sebagian deteksi SAM terbuang (${metrics.masks_dropped}), periksa apakah ada sajian yang hilang`,
+    );
+    advice.push(
+      "Ada bagian yang tidak kepotong sempurna — coba foto lagi dari atas, pastikan semuanya masuk frame.",
     );
   }
   if (typeof metrics?.mask_area_fraction === "number") {
@@ -220,13 +241,19 @@ function reviewFromMetrics(metrics: any): { needed: boolean; reasons: string[] }
       reasons.push(
         "Area sajian sangat kecil dibanding foto (di bawah 5%), periksa apakah potongan terlalu sempit",
       );
+      advice.push(
+        "Sajiannya kekecilan di foto — dekatkan sedikit, lalu foto lagi.",
+      );
     } else if (metrics.mask_area_fraction > AREA_MAX) {
       reasons.push(
         "Area sajian hampir memenuhi foto (di atas 90%), periksa apakah background ikut terpotong",
       );
+      advice.push(
+        "Sajiannya memenuhi foto sampai penuh — mundur sedikit biar ada ruang, lalu foto lagi.",
+      );
     }
   }
-  return { needed: reasons.length > 0, reasons };
+  return { needed: reasons.length > 0, reasons, advice };
 }
 
 // Sides where the preview mask newly touches the frame compared with the
@@ -366,13 +393,51 @@ const server = Bun.serve({
         progressDone = 3;
         const finalPath = join(dir, "final.png");
         const maskPath = join(dir, "mask.png");
-        const worker = await runWorker({
+        // Fotografer otomatis, bukan slider: server mencoba kandidat expand
+        // {0, 2} lalu memilih yang TERBESAR dengan growth < 0,02 vs default.
+        // Aturan ini TERBUKTI di data uji (STEP2_3_NOTES §6, NEW_PHOTO_NOTES
+        // §3): +2 aman di untir/seblak (growth ≤0,008), ditolak tepat di
+        // Garang Asem (growth 0,0242). -20 memperkasar tepi, +20 bocor di
+        // semua foto — keduanya tidak pernah dicoba otomatis. Nilai antara
+        // (+5/+10) belum diukur, jadi jangan dikarang. Tidak ada panggilan
+        // Meta tambahan di sini: worker CLI yang sama, murah.
+        const baseWorker = await runWorker({
           original: originalPath,
           backdrop: backdropPath,
           sam_texts: samTexts,
           output: finalPath,
           mask_output: maskPath,
         });
+        let worker: any = baseWorker;
+        let autoExpand = 0;
+        if (baseWorker.ok) {
+          const baseArea = baseWorker.mask_area_fraction;
+          const candFinal = join(dir, "final.cand.png");
+          const candMask = join(dir, "mask.cand.png");
+          try {
+            const cand = await runWorker({
+              original: originalPath,
+              backdrop: backdropPath,
+              sam_texts: samTexts,
+              output: candFinal,
+              mask_output: candMask,
+              expand_px: 2,
+              shadow_strength: DEFAULT_PARAMS.shadow_strength,
+              shadow_blur: DEFAULT_PARAMS.shadow_blur,
+            });
+            const growth = cand.mask_area_fraction - baseArea;
+            if (cand.ok && growth < AREA_GROWTH_WARN) {
+              // Kandidat aman: pakai hasilnya sebagai final.
+              await Bun.write(finalPath, Bun.file(candFinal));
+              await Bun.write(maskPath, Bun.file(candMask));
+              worker = cand;
+              autoExpand = 2;
+            }
+          } finally {
+            await unlink(candFinal).catch(() => {});
+            await unlink(candMask).catch(() => {});
+          }
+        }
         if (!worker.ok) {
           // No serving mask: the photo is not processed, so do not keep
           // the original (or any partial file) on the server.
@@ -414,7 +479,9 @@ const server = Bun.serve({
         // metrics. Adjust later re-runs the worker from these stored texts,
         // never from anything the client sends.
         await Bun.write(join(dir, "sam_texts.json"), JSON.stringify(samTexts));
-        await Bun.write(join(dir, "params.json"), JSON.stringify(DEFAULT_PARAMS));
+        // Params mencerminkan pilihan auto-expand server (bukan slider user).
+        const chosenParams = { ...DEFAULT_PARAMS, expand_px: autoExpand };
+        await Bun.write(join(dir, "params.json"), JSON.stringify(chosenParams));
         await Bun.write(
           join(dir, "metrics.json"),
           JSON.stringify({
@@ -433,6 +500,9 @@ const server = Bun.serve({
             items: result.items,
             costRangeIdr: result.cost_range_idr,
             caption: result.caption_id,
+            // Pilihan fotografer otomatis: nilai expand yang dipakai untuk
+            // final ini. Hanya untuk log/debug, bukan kontrol user.
+            autoExpand,
           }),
         );
         const metrics = JSON.parse(
@@ -447,6 +517,7 @@ const server = Bun.serve({
           items: result.items,
           costRangeIdr: result.cost_range_idr,
           caption: result.caption_id,
+          autoExpand,
         });
       } catch (error) {
         // Any failure after the original was written (SAM, backdrop,

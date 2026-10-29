@@ -7,9 +7,10 @@ let uploadFile = null;
 // drags sits over the displayed photo; fractions map linearly to natural
 // pixels because the displayed image keeps its aspect ratio.
 // processedCrop is the crop snapshot the current process was built from.
-// If the crop changes afterwards, adjust is disabled and the UI forces a
-// re-process (new process id, new SAM call). The server enforces the same
-// rule structurally: adjust always uses the stored source of its own id.
+// If the crop changes afterwards, the old result is retired and the UI forces
+// a re-process (new process id, new SAM call). The server enforces the same
+// rule structurally: an adjust call always uses the stored source of its own
+// id (adjust is hidden from the UI, kept only as a backend endpoint).
 let cropImg = null;
 let cropFile = null;
 let crop = { x: 0, y: 0, w: 1, h: 1 };
@@ -84,24 +85,16 @@ function cropSnapshot() {
   return JSON.stringify(crop);
 }
 
-// Crop changed after a process: adjust no longer applies to this crop, so
-// disable it and force a re-process. Server-side the same rule holds: an
-// adjust call always uses its own id's stored source, never a new crop.
+// Crop changed after a process: the old process is retired, so force a
+// re-process. Server-side the same rule holds: an adjust call always uses
+// its own id's stored source, never a new crop (adjust is hidden from UI,
+// kept only as a backend endpoint).
 function checkCropStale() {
   const stale = processedCrop !== null && cropSnapshot() !== processedCrop;
   $("crop-note").hidden = !stale;
   $("crop-note").textContent = stale
     ? "Crop berubah. Proses ulang untuk hasil baru (ID proses baru, panggilan SAM baru). Penyesuaian proses lama dinonaktifkan."
     : "";
-  refreshAdjustEnabled();
-}
-
-function refreshAdjustEnabled() {
-  const stale = processedCrop !== null && cropSnapshot() !== processedCrop;
-  const enabled = current !== null && current.id && !stale;
-  ["adj-preview", "adj-reset", "adj-save"].forEach((id) => {
-    $(id).disabled = !enabled;
-  });
 }
 
 // Build the upload file: crop from the ORIGINAL photo first, then downscale
@@ -154,9 +147,7 @@ $("photo").addEventListener("change", () => {
   if (!file) return;
   $("upload-label").textContent = file.name;
   $("process").disabled = true;
-  // A new photo retires the previous process's adjust panel: the panel
-  // belongs to a process id, and a new photo means a new process.
-  $("adjust").hidden = true;
+  // A new photo retires the previous process.
   processedCrop = null;
   crop = { x: 0, y: 0, w: 1, h: 1 };
   cropFile = file;
@@ -282,119 +273,16 @@ document.querySelectorAll(".tabs button").forEach((tab) => {
 // A warning never turns a successful pipeline into a failure.
 function renderReview(review) {
   $("pipeline-status").textContent = "Proses berhasil.";
-  const needed = review && review.needed;
-  $("review-box").hidden = !needed;
-  $("review-ok").hidden = !!needed;
-  if (needed) {
-    $("review-reasons").innerHTML = (review.reasons || [])
-      .map((reason) => `<li>${esc(reason)}</li>`)
+  const advice = (review && review.advice) || [];
+  $("advice-box").hidden = advice.length === 0;
+  if (advice.length > 0) {
+    $("advice-list").innerHTML = advice
+      .map((tip) => `<li>${esc(tip)}</li>`)
       .join("");
   }
 }
 
-function resetAdjustSliders() {
-  $("adj-expand").value = 0;
-  $("adj-expand-val").textContent = "0 px";
-  $("adj-strength").value = 140;
-  $("adj-strength-val").textContent = "140";
-  $("adj-blur").value = 30;
-  $("adj-blur-val").textContent = "30";
-  $("expand-warning").hidden = true;
-  $("expand-warning").textContent = "";
-}
 
-$("adj-expand").addEventListener("input", () => {
-  $("adj-expand-val").textContent = `${$("adj-expand").value} px`;
-});
-$("adj-strength").addEventListener("input", () => {
-  $("adj-strength-val").textContent = $("adj-strength").value;
-});
-$("adj-blur").addEventListener("input", () => {
-  $("adj-blur-val").textContent = $("adj-blur").value;
-});
-
-function adjustParams() {
-  return {
-    expand_px: Number($("adj-expand").value),
-    shadow_strength: Number($("adj-strength").value),
-    shadow_blur: Number($("adj-blur").value),
-  };
-}
-
-async function callAdjust(body) {
-  const res = await fetch("/api/adjust", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await readJson(res);
-  if (!res.ok) throw new Error(data.error || "penyesuaian gagal");
-  return data;
-}
-
-function showPreview(data) {
-  // The preview never replaces the final until saved: compare shows the
-  // current final next to the preview, and the main SESUDAH stays put.
-  $("compare-final").src = `${current.imageUrl}?v=${finalVersion}`;
-  $("compare-preview").src = `${data.previewUrl}?v=${Date.now()}`;
-  $("compare").hidden = false;
-  renderReview(data.review);
-  const changed = data.borderChanged || [];
-  $("expand-warning").hidden = changed.length === 0;
-  $("expand-warning").textContent =
-    changed.length > 0
-      ? `Expand mendorong mask ke tepi frame (sisi: ${changed.join(", ")}). Periksa pratinjau apakah background ikut masuk.`
-      : "";
-  $("adjust-note").textContent =
-    "Ini pratinjau saja, hasil katalog belum berubah. Tekan Simpan penyesuaian untuk memakai hasil ini.";
-}
-
-$("adj-preview").addEventListener("click", async () => {
-  if (!current || !current.id) return;
-  $("adjust-note").textContent = "Membuat pratinjau...";
-  try {
-    const data = await callAdjust({ id: current.id, ...adjustParams() });
-    showPreview(data);
-  } catch (error) {
-    $("adjust-note").textContent = error.message;
-  }
-});
-
-$("adj-reset").addEventListener("click", async () => {
-  if (!current || !current.id) return;
-  resetAdjustSliders();
-  $("adjust-note").textContent = "Membuat pratinjau default...";
-  try {
-    const data = await callAdjust({ id: current.id, reset: true });
-    showPreview(data);
-  } catch (error) {
-    $("adjust-note").textContent = error.message;
-  }
-});
-
-$("adj-save").addEventListener("click", async () => {
-  if (!current || !current.id) return;
-  $("adjust-note").textContent = "Menyimpan penyesuaian...";
-  try {
-    const res = await fetch("/api/adjust/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: current.id }),
-    });
-    const data = await readJson(res);
-    if (!res.ok) throw new Error(data.error || "simpan penyesuaian gagal");
-    finalVersion += 1;
-    current.imageUrl = data.imageUrl;
-    $("result-image").src = `${data.imageUrl}?v=${finalVersion}`;
-    $("compare").hidden = true;
-    renderReview(data.review);
-    $("expand-warning").hidden = true;
-    $("adjust-note").textContent =
-      "Penyesuaian tersimpan. Gambar SESUDAH sudah diperbarui.";
-  } catch (error) {
-    $("adjust-note").textContent = error.message;
-  }
-});
 
 $("process").addEventListener("click", async () => {
   const file = uploadFile || $("photo").files[0];
@@ -423,7 +311,7 @@ $("process").addEventListener("click", async () => {
     current = data;
     finalVersion = 0;
     // The crop this process was built from: any later crop change retires
-    // this process's adjust panel until a re-process happens.
+    // this process until a re-process happens.
     processedCrop = cropSnapshot();
     $("result-image").src = data.imageUrl;
     $("dish").value = data.dish;
@@ -440,13 +328,7 @@ $("process").addEventListener("click", async () => {
     $("caption").value = data.caption;
     setProgress(5, false);
     $("result").hidden = false;
-    // Adjust panel belongs to this process id from now on.
-    $("adjust").hidden = false;
-    $("compare").hidden = true;
-    $("adjust-note").textContent = "";
-    resetAdjustSliders();
     renderReview(data.review);
-    refreshAdjustEnabled();
     $("result").scrollIntoView({ behavior: "smooth", block: "start" });
     $("status").textContent = "Jadi. Koreksi dulu kalau perlu, lalu simpan.";
   } catch (error) {
@@ -497,6 +379,15 @@ $("save").addEventListener("click", async () => {
   });
   $("status").textContent = "Tersimpan di katalog.";
   loadCatalog();
+});
+
+$("reshoot").addEventListener("click", () => {
+  // Kembali ke tahap unggah: buang hasil proses ini, pengguna memotret lagi.
+  current = null;
+  processedCrop = null;
+  $("result").hidden = true;
+  $("status").textContent = "Pilih foto baru, lalu tekan Proses jadi katalog.";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 async function loadCatalog() {
