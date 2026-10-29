@@ -11,6 +11,9 @@
    - SF Pro stack, Inter after it: user rule is iOS font; Apple devices render real SF Pro,
      Android falls back to Inter, the closest open lookalike, since SF Pro is not on Android.
    - 480px column: Figma iPhone frame is 393px wide; sellers work from phones.
+   - Tablet/desktop breakpoints (29 Okt): judges open the link on laptops, so
+     >=768px widens to 700px and >=1024px to 980px with two-column hero and
+     guide examples plus 2/3-column catalog; phones unchanged, no new decor.
    - Tabs Foto/Biaya/Caption: Figma Android result tab bar, one concern visible at a time.
    - Ingredients folded in <details>: seller still corrects them, but the dish and cost stay first.
    - Before/after stacked with labels: at phone width side-by-side shrinks both photos too far.
@@ -771,4 +774,95 @@ details textarea {
   padding: 8px;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Responsif tablet dan desktop (29 Okt, permintaan fahmy: juri buka link di
+   laptop, kolom 480px di layar lebar kelihatan setengah jadi). HP <768px
+   TIDAK BERUBAH: semua aturan di bawah ini ada di dalam @media min-width.
+   Tanpa gradien/dekorasi baru, cuma lebar dan kolom. */
+
+/* --- Tablet: >=768px --- */
+@media (min-width: 768px) {
+  body {
+    max-width: 700px;
+    padding: 24px 24px calc(32px + env(safe-area-inset-bottom));
+  }
+
+  .hero {
+    padding: 28px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  /* Contoh panduan berdampingan dua kolom; judul dan teks tetap selebar penuh. */
+  .guide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+  }
+  .guide-head,
+  .guide-intro,
+  .guide h3,
+  .guide-note {
+    grid-column: 1 / -1;
+  }
+  .guide-example {
+    margin: 12px 0 0;
+  }
+
+  /* Katalog dua kolom. */
+  #catalog {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  #catalog .item {
+    margin-bottom: 0;
+  }
+}
+
+/* --- Desktop: >=1024px --- */
+@media (min-width: 1024px) {
+  body {
+    max-width: 980px;
+    padding: 32px 32px calc(40px + env(safe-area-inset-bottom));
+  }
+
+  /* Hero dua kolom: panduan di kiri, alur unggah di kanan. */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    column-gap: 32px;
+    padding: 32px;
+  }
+  .hero > h1,
+  .hero > .hero-sub {
+    grid-column: 1 / -1;
+  }
+  .hero > .guide {
+    grid-column: 1;
+    margin: 0;
+    display: block;
+  }
+  .hero > .hero-flow {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  /* Katalog tiga kolom; sebelum/sesudah berdampingan karena ruang cukup. */
+  #catalog {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  #panel-foto {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  #panel-foto figure {
+    margin: 0;
+  }
 }

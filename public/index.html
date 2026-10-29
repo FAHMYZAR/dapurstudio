@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="/logo.png?v=1">
-<link rel="stylesheet" href="/style.css?v=7">
+<link rel="stylesheet" href="/style.css?v=8">
 </head>
 <body>
 <header class="app-header">
@@ -60,6 +60,7 @@
       <p class="guide-note">Harga dan caption bisa diedit sebelum simpan, karena hasil AI bisa berbeda tiap proses. Panduan ini membantu foto lolos, bukan menjamin hasil selalu sempurna. Kalau masih ada yang terpotong, hasil akan ditandai <span class="badge-review">Perlu direview</span>, bukan langsung gagal.</p>
       <p class="guide-note">Aplikasi ini hanya memproses foto makanan dan minuman. Foto di luar itu akan ditolak dan tidak disimpan sebagai katalog.</p>
     </section>
+    <div class="hero-flow">
     <input id="photo" class="sr-only" type="file" accept="image/*">
     <label class="btn-primary" for="photo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
@@ -86,6 +87,7 @@
       <span id="process-label">Proses jadi katalog</span>
     </button>
     <p id="status" role="status"></p>
+    </div>
   </section>
 
   <section class="card" id="pipeline" hidden>
