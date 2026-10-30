@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="/logo.png?v=1">
-<link rel="stylesheet" href="/style.css?v=8">
+<link rel="stylesheet" href="/style.css?v=9">
 </head>
 <body>
 <header class="app-header">
@@ -19,6 +19,34 @@
   <section class="hero">
     <h1>Dari foto dapur, jadi katalog studio.</h1>
     <p class="hero-sub">Foto makanan tetap asli. AI bantu rapikan background dan siapkan jualan.</p>
+    <div class="hero-flow">
+    <input id="photo" class="sr-only" type="file" accept="image/*">
+    <label class="btn-primary" for="photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+      <span id="upload-label">Unggah foto makanan</span>
+    </label>
+    <button class="guide-reopen" id="guide-reopen" type="button">Lihat panduan foto</button>
+    <img id="preview" alt="" hidden>
+    <div id="crop-wrap" hidden>
+      <div id="crop-stage">
+        <img id="crop-img" alt="Foto yang akan diproses">
+        <div id="crop-box" role="application" aria-label="Area crop">
+          <div class="crop-handle" data-handle="nw"></div>
+          <div class="crop-handle" data-handle="ne"></div>
+          <div class="crop-handle" data-handle="sw"></div>
+          <div class="crop-handle" data-handle="se"></div>
+        </div>
+      </div>
+      <p class="hint">Geser kotak untuk memilih area foto, tarik sudutnya untuk mengubah ukuran. Biarkan penuh kalau tidak perlu crop.</p>
+      <button class="btn-secondary" id="crop-reset" type="button">Kembalikan crop penuh</button>
+      <p id="crop-note" class="warn" hidden></p>
+    </div>
+    <button class="btn-primary" id="process" disabled>
+      <span class="spinner" hidden></span>
+      <span id="process-label">Proses jadi katalog</span>
+    </button>
+    <p id="status" role="status"></p>
+    </div>
     <section class="guide" id="guide" aria-label="Panduan foto">
       <div class="guide-head">
         <h2>Panduan foto</h2>
@@ -27,7 +55,7 @@
       <p class="guide-intro">Luangkan satu menit sebelum memotret. Bagian makanan yang terpotong frame atau tertutup tangan tidak bisa dikembalikan oleh AI, jadi foto awalnya harus sudah benar. Potongannya disesuaikan otomatis oleh AI, jadi kamu tidak perlu mengatur apa pun.</p>
       <h3>1. Cara foto yang benar</h3>
       <ul class="guide-rules">
-        <li>Satu sajian per foto.</li>
+        <li>Foto satu menu atau paket makanan. Kalau paketnya ada makanan dan minuman, pastikan semuanya utuh dalam satu frame.</li>
         <li>Piring dan makanan utuh, jangan menyentuh tepi frame.</li>
         <li>Ambil dari atas atau agak miring.</li>
         <li>Latar dapur yang berantakan tidak masalah.</li>
@@ -60,34 +88,6 @@
       <p class="guide-note">Harga dan caption bisa diedit sebelum simpan, karena hasil AI bisa berbeda tiap proses. Panduan ini membantu foto lolos, bukan menjamin hasil selalu sempurna. Kalau masih ada yang terpotong, hasil akan ditandai <span class="badge-review">Perlu direview</span>, bukan langsung gagal.</p>
       <p class="guide-note">Aplikasi ini hanya memproses foto makanan dan minuman. Foto di luar itu akan ditolak dan tidak disimpan sebagai katalog.</p>
     </section>
-    <div class="hero-flow">
-    <input id="photo" class="sr-only" type="file" accept="image/*">
-    <label class="btn-primary" for="photo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
-      <span id="upload-label">Unggah foto makanan</span>
-    </label>
-    <button class="guide-reopen" id="guide-reopen" type="button">Lihat panduan foto</button>
-    <img id="preview" alt="" hidden>
-    <div id="crop-wrap" hidden>
-      <div id="crop-stage">
-        <img id="crop-img" alt="Foto yang akan diproses">
-        <div id="crop-box" role="application" aria-label="Area crop">
-          <div class="crop-handle" data-handle="nw"></div>
-          <div class="crop-handle" data-handle="ne"></div>
-          <div class="crop-handle" data-handle="sw"></div>
-          <div class="crop-handle" data-handle="se"></div>
-        </div>
-      </div>
-      <p class="hint">Geser kotak untuk memilih area foto, tarik sudutnya untuk mengubah ukuran. Biarkan penuh kalau tidak perlu crop.</p>
-      <button class="btn-secondary" id="crop-reset" type="button">Kembalikan crop penuh</button>
-      <p id="crop-note" class="warn" hidden></p>
-    </div>
-    <button class="btn-primary" id="process" disabled>
-      <span class="spinner" hidden></span>
-      <span id="process-label">Proses jadi katalog</span>
-    </button>
-    <p id="status" role="status"></p>
-    </div>
   </section>
 
   <section class="card" id="pipeline" hidden>

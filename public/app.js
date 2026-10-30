@@ -434,10 +434,19 @@ async function loadCatalog() {
 // unggah: tombol unggah tetap aktif walau panduan ditutup.
 $("guide-close")?.addEventListener("click", () => {
   $("guide").hidden = true;
+  syncGuideUI();
 });
 $("guide-reopen")?.addEventListener("click", () => {
   $("guide").hidden = false;
+  syncGuideUI();
   $("guide").scrollIntoView({ behavior: "smooth", block: "start" });
 });
+// Tombol "Lihat panduan foto" hanya muncul saat panduan sedang tertutup,
+// supaya tidak duplikat dengan panduan yang sudah terbuka.
+function syncGuideUI() {
+  const reopen = $("guide-reopen");
+  if (reopen) reopen.hidden = !$("guide").hidden;
+}
+syncGuideUI();
 
 loadCatalog();

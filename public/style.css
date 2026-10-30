@@ -831,10 +831,10 @@ details textarea {
     padding: 32px 32px calc(40px + env(safe-area-inset-bottom));
   }
 
-  /* Hero dua kolom: panduan di kiri, alur unggah di kanan. */
+  /* Hero dua kolom: alur unggah di kiri (aksi utama), panduan di kanan. */
   .hero {
     display: grid;
-    grid-template-columns: 1.05fr 1fr;
+    grid-template-columns: 1fr 1.05fr;
     column-gap: 32px;
     padding: 32px;
   }
@@ -842,14 +842,14 @@ details textarea {
   .hero > .hero-sub {
     grid-column: 1 / -1;
   }
-  .hero > .guide {
+  .hero > .hero-flow {
     grid-column: 1;
+    min-width: 0;
+  }
+  .hero > .guide {
+    grid-column: 2;
     margin: 0;
     display: block;
-  }
-  .hero > .hero-flow {
-    grid-column: 2;
-    min-width: 0;
   }
 
   /* Katalog tiga kolom; sebelum/sesudah berdampingan karena ruang cukup. */
