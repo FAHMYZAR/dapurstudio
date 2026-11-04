@@ -160,6 +160,9 @@ import math
 import sys
 from pathlib import Path
 
+# Pillow dibundel lokal di pylibs/ (tanpa akses root/pip di server).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "pylibs"))
+
 from PIL import Image, ImageChops, ImageFilter
 from meta_sam_parser import (
     CompletedOutcome,
