@@ -18,6 +18,16 @@ let processedCrop = null;
 let cropObjectUrl = null;
 let previewObjectUrl = null;
 let finalVersion = 0;
+// Crop lock: true while the pipeline is processing. The user cannot drag
+// the crop box or reset it mid-process (race condition: a crop change
+// during processing would silently apply to the next process, not the
+// current one, confusing the seller).
+let cropLocked = false;
+// Process timing: tracks when the process started and when each stage
+// became active, so the UI can show elapsed time and per-stage ETA.
+let processStartTime = 0;
+let stageStartTimes = {};
+let elapsedTimer = null;
 
 // Respons yang bukan JSON (misalnya halaman error HTML dari Cloudflare atau
 // tunnel saat koneksi diputus) harus jadi pesan manusiawi, bukan pesan mentah
@@ -40,6 +50,24 @@ const esc = (text) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+// Crop lock: disables box dragging and the reset button while processing.
+function setCropLocked(locked) {
+  cropLocked = locked;
+  const box = $("crop-box");
+  const reset = $("crop-reset");
+  if (box) {
+    box.style.pointerEvents = locked ? "none" : "";
+    box.style.opacity = locked ? "0.6" : "";
+  }
+  if (reset) reset.disabled = locked;
+  const note = $("crop-note");
+  if (note) {
+    note.textContent = locked
+      ? "Crop dikunci selama proses berjalan."
+      : "";
+  }
+}
+
 // Stepper: step i (1-based) is done when i <= done, active while processing
 // when i === done + 1, waiting otherwise. Numbers come back for waiting steps.
 function setProgress(done, processing) {
@@ -53,9 +81,48 @@ function setProgress(done, processing) {
       num.textContent = "✓";
     } else {
       num.textContent = String(i);
-      if (processing && i === done + 1) li.classList.add("active");
+      if (processing && i === done + 1) {
+        li.classList.add("active");
+        // Track when each stage became active for ETA calculation.
+        if (!stageStartTimes[i]) stageStartTimes[i] = Date.now();
+      }
     }
   }
+  updateElapsedDisplay(done, processing);
+}
+
+// Elapsed time + ETA display. Shows "0:23" elapsed, and for the active stage
+// an estimate like "(~15 dtk lagi)" based on the average of completed stages.
+function updateElapsedDisplay(done, processing) {
+  const status = $("status");
+  if (!status || !processing) return;
+  const elapsed = Math.floor((Date.now() - processStartTime) / 1000);
+  const mm = Math.floor(elapsed / 60);
+  const ss = String(elapsed % 60).padStart(2, "0");
+  // ETA: average duration of completed stages × remaining stages.
+  const completedStages = Object.keys(stageStartTimes)
+    .map(Number)
+    .filter((s) => s <= done)
+    .sort((a, b) => a - b);
+  let etaText = "";
+  if (completedStages.length >= 1 && done < 5) {
+    const durations = [];
+    for (let k = 1; k < completedStages.length; k++) {
+      durations.push(
+        stageStartTimes[completedStages[k]] - stageStartTimes[completedStages[k - 1]],
+      );
+    }
+    // Include current stage partial duration if it's been active a while.
+    const avg =
+      durations.length > 0
+        ? durations.reduce((a, b) => a + b, 0) / durations.length
+        : 15000; // fallback: 15s per stage
+    const remaining = 5 - done;
+    const etaSec = Math.round((avg * remaining) / 1000);
+    etaText = ` · kira-kira ${etaSec} dtk lagi`;
+  }
+  const base = status.dataset.base || "Memproses";
+  status.textContent = `${base}... ${mm}:${ss}${etaText}`;
 }
 
 function updateCostHero() {
@@ -193,6 +260,7 @@ $("photo").addEventListener("change", () => {
   }
 
   box.addEventListener("pointerdown", (event) => {
+    if (cropLocked) return;
     event.preventDefault();
     const handle = event.target.closest(".crop-handle");
     const point = fractionsFromEvent(event);
@@ -252,6 +320,7 @@ $("photo").addEventListener("change", () => {
 })();
 
 $("crop-reset").addEventListener("click", () => {
+  if (cropLocked) return;
   crop = { x: 0, y: 0, w: 1, h: 1 };
   renderCropBox();
   rebuildUpload();
@@ -290,11 +359,27 @@ $("process").addEventListener("click", async () => {
     $("status").textContent = "Pilih foto dulu.";
     return;
   }
-  $("status").textContent = "Memproses, tunggu sebentar...";
+  // Lock crop during processing + start the elapsed timer.
+  setCropLocked(true);
+  processStartTime = Date.now();
+  stageStartTimes = { 1: processStartTime };
+  $("status").dataset.base = "Memproses";
+  $("status").textContent = "Memproses... 0:00";
   $("process").disabled = true;
   $("process").querySelector(".spinner").hidden = false;
   $("pipeline").hidden = false;
   setProgress(0, true);
+  // Tick the elapsed display every second (the poll below only updates
+  // on stage changes, which can be 10-30s apart).
+  elapsedTimer = setInterval(() => {
+    try {
+      const r = fetch("/api/progress").then((r) => r.json()).then((p) => {
+        // Re-render with current done value to update the timer text.
+        const done = p.done || 0;
+        updateElapsedDisplay(done, true);
+      }).catch(() => {});
+    } catch {}
+  }, 1000);
   const poll = setInterval(async () => {
     try {
       const r = await fetch("/api/progress");
@@ -333,8 +418,13 @@ $("process").addEventListener("click", async () => {
     $("status").textContent = "Jadi. Koreksi dulu kalau perlu, lalu simpan.";
   } catch (error) {
     $("status").textContent = error.message;
+    delete $("status").dataset.base;
   } finally {
     clearInterval(poll);
+    if (elapsedTimer) clearInterval(elapsedTimer);
+    elapsedTimer = null;
+    setCropLocked(false);
+    delete $("status").dataset.base;
     $("process").disabled = false;
     $("process").querySelector(".spinner").hidden = true;
   }

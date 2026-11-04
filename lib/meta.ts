@@ -197,6 +197,77 @@ export async function dishName(imagePath: string): Promise<string | null> {
   }
 }
 
+// Two-stage mask reasoning: Spark looks at the original photo and decides
+// whether the mask should target the container, the food contents, or both.
+// This is the "smart" layer over SAM's raw segmentation: SAM sometimes
+// misses the container (leading to a tight crop on food only), or the food
+// is messy and the container gives a cleaner boundary. The reasoning picks
+// the strategy; the caller falls back to "both" on any failure.
+const MASK_REASON_PROMPT = `Lihat foto makanan ini. Jawab dalam JSON saja, tanpa teks lain: {"strategy": "container|food|both", "reason": "satu kalimat singkat"}. Aturan: pilih "container" bila wadah (piring/mangkuk/gelas/cangkir) terlihat jelas dan utuh sementara makanannya berantakan atau tidak jelas batasnya; pilih "food" bila makanan terlihat jelas dan wadahnya tidak terlihat atau terpotong; pilih "both" bila keduanya terlihat jelas atau bila ragu.`;
+
+export interface MaskStrategy {
+  strategy: "container" | "food" | "both";
+  reason: string;
+}
+
+export async function reasonMaskTarget(
+  imagePath: string,
+): Promise<MaskStrategy | null> {
+  try {
+    let content: string;
+    if (cli()) {
+      const data = await runCli([
+        "chat",
+        "--image",
+        imagePath,
+        "--max-tokens",
+        "512",
+        "--message",
+        MASK_REASON_PROMPT,
+      ]);
+      content = data.response.choices[0].message.content;
+    } else {
+      const bytes = await Bun.file(imagePath).arrayBuffer();
+      const mime = imagePath.toLowerCase().endsWith(".png")
+        ? "image/png"
+        : "image/jpeg";
+      const data = await post("/chat/completions", {
+        model: "muse-spark-1.3",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: MASK_REASON_PROMPT },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mime};base64,${Buffer.from(bytes).toString("base64")}`,
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 512,
+      });
+      content = data.choices[0].message.content;
+    }
+    const parsed = JSON.parse(content);
+    if (
+      parsed.strategy === "container" ||
+      parsed.strategy === "food" ||
+      parsed.strategy === "both"
+    ) {
+      return {
+        strategy: parsed.strategy,
+        reason: typeof parsed.reason === "string" ? parsed.reason : "",
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // Dish identification + ingredient cost range + sales caption, as JSON.
 export async function estimate(imagePath: string): Promise<Estimate> {
   let content: string;

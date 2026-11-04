@@ -36,7 +36,7 @@
 
 import { join, resolve, sep } from "node:path";
 import { rename, rm, unlink } from "node:fs/promises";
-import { dishName, estimate, generateBackdrop, samSegment } from "./lib/meta";
+import { dishName, estimate, generateBackdrop, reasonMaskTarget, samSegment } from "./lib/meta";
 
 const PORT = Number(Bun.env.PORT || 3000);
 const UPLOADS = "uploads";
@@ -48,19 +48,24 @@ const PROCESSES = "data/processes";
 // process, one value: fine for a single-seller test deploy, not per-user.
 let progressDone = 0;
 
-// Serving prompts, tried in parallel. A prompt that finds nothing is skipped;
-// the union keeps every serving object the photo actually contains.
-// Prompt wording matters, measured 27 Okt 2026 against the verified slice
-// mask: bare "plate of food" masks only the plate ring (food becomes holes),
-// while "plated food" and "plate of fried food" mask the whole dish assembly.
-// Unioning them keeps the assembly; the ring-only mask is harmless inside it.
-const SERVING_PROMPTS = [
-  "plated food",
-  "plate of fried food",
-  "plate of food",
+// Two-stage detection: container prompts and food prompts run separately,
+// then Spark reasons about which to use. The old single SERVING_PROMPTS list
+// is split: container prompts catch the plate/bowl/cup boundary, food
+// prompts catch the contents. When SAM misses the container (the "tight
+// crop" failure), the reasoning can fall back to the container mask, and
+// vice versa. The union ("both") remains the default when unsure.
+const CONTAINER_PROMPTS = [
+  "plate",
+  "bowl",
   "coffee mug",
   "glass",
   "cup",
+];
+const FOOD_PROMPTS = [
+  "plated food",
+  "plate of fried food",
+  "plate of food",
+  "food",
 ];
 
 // Worker parameter defaults and clamps. Snap is deliberately NOT exposed:
@@ -373,12 +378,31 @@ const server = Bun.serve({
         await Bun.write(originalPath, photo);
         progressDone = 1;
 
-        const texts = await Promise.all(
-          SERVING_PROMPTS.map((prompt) =>
+        const containerTexts = await Promise.all(
+          CONTAINER_PROMPTS.map((prompt) =>
             samSegment(originalPath, prompt).catch(() => ""),
           ),
         );
-        const samTexts = texts.filter(Boolean);
+        const foodTexts = await Promise.all(
+          FOOD_PROMPTS.map((prompt) =>
+            samSegment(originalPath, prompt).catch(() => ""),
+          ),
+        );
+        // Two-AI reasoning: Spark decides whether to mask the container,
+        // the food, or both. Falls back to "both" (union) on any failure.
+        const maskStrategy = await reasonMaskTarget(originalPath).catch(
+          () => null,
+        );
+        const containerSam = containerTexts.filter(Boolean);
+        const foodSam = foodTexts.filter(Boolean);
+        let samTexts: string[];
+        if (!maskStrategy || maskStrategy.strategy === "both") {
+          samTexts = [...containerSam, ...foodSam];
+        } else if (maskStrategy.strategy === "container") {
+          samTexts = containerSam.length > 0 ? containerSam : foodSam;
+        } else {
+          samTexts = foodSam.length > 0 ? foodSam : containerSam;
+        }
         progressDone = 2;
         // Validated template first: one flat backdrop, generated once and
         // reviewed, reused for every photo. Generating a fresh backdrop per
