@@ -532,6 +532,12 @@ $("guide-reopen")?.addEventListener("click", () => {
   syncGuideUI();
   $("guide").scrollIntoView({ behavior: "smooth", block: "start" });
 });
+// Force-hide guide on load (default closed). The HTML has the hidden
+// attribute too, but this JS ensures it even if the HTML is cached.
+(function hideGuideOnLoad() {
+  const guide = $("guide");
+  if (guide) guide.hidden = true;
+})();
 // Tombol "Lihat panduan foto" hanya muncul saat panduan sedang tertutup,
 // supaya tidak duplikat dengan panduan yang sudah terbuka.
 function syncGuideUI() {
