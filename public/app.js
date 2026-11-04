@@ -341,7 +341,8 @@ document.querySelectorAll(".tabs button").forEach((tab) => {
 // --- Review status: pipeline success and visual review are separate. --------
 // A warning never turns a successful pipeline into a failure.
 function renderReview(review) {
-  $("pipeline-status").textContent = "Proses berhasil.";
+  const pipelineStatus = $("pipeline-status");
+  if (pipelineStatus) pipelineStatus.textContent = "Proses berhasil.";
   const advice = (review && review.advice) || [];
   $("advice-box").hidden = advice.length === 0;
   if (advice.length > 0) {
